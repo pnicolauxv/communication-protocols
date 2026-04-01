@@ -1,0 +1,58 @@
+# Build results
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# NuGet packages
+*.nupkg
+packages/
+# Si usas PackageReference, normalmente no necesitas ignorar nada extra
+
+# Generated files
+Generated/
+*.g.cs
+*.g.i.cs
+
+# Publish output
+publish/
+
+# Azure / deployment
+*.azurePubxml
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Test results
+TestResults/
+
+# Coverage
+coverage/
+*.coverage
+*.coveragexml
+
+# Dotnet tools
+.dotnet/
+
+# Local settings
+appsettings.Development.json

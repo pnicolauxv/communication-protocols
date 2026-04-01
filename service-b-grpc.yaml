@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicebgrpc-deployment
+  labels:
+    app: servicebgrpc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servicebgrpc
+  template:
+    metadata:
+      labels:
+        app: servicebgrpc
+    spec:
+      containers:
+        - name: servicebgrpc
+          image: image-registry.openshift-image-registry.svc:5000/pablo-demo/servicebgrpc
+          ports:
+            - containerPort: 5000
+          resources:
+            # requests:
+            #   memory: "256Mi"
+            #   cpu: "250m"
+            # limits:
+            #   memory: "512Mi"
+            #   cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: certs-volume
+          configMap:
+            name: servicebgrpc-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicebgrpc-service
+  labels:
+    app: servicebgrpc
+spec:
+  type: ClusterIP
+  selector:
+    app: servicebgrpc
+  ports:
+    - port: 5000
+      targetPort: 5000

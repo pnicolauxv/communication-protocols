@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicebmtls-deployment
+  labels:
+    app: servicebmtls
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servicebmtls
+  template:
+    metadata:
+      labels:
+        app: servicebmtls
+    spec:
+      containers:
+        - name: servicebmtls
+          image: image-registry.openshift-image-registry.svc:5000/pablo-demo/servicebmtls
+          ports:
+            - containerPort: 5000
+          resources:
+            # requests:
+            #   memory: "256Mi"
+            #   cpu: "250m"
+            # limits:
+            #   memory: "512Mi"
+            #   cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: certs-volume
+          configMap:
+            name: servicebmtls-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicebmtls-service
+  labels:
+    app: servicebmtls
+spec:
+  type: ClusterIP
+  selector:
+    app: servicebmtls
+  ports:
+    - port: 5000
+      targetPort: 5000

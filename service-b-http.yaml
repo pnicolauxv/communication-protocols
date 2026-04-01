@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicebhttp-deployment
+  labels:
+    app: servicebhttp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servicebhttp
+  template:
+    metadata:
+      labels:
+        app: servicebhttp
+    spec:
+      containers:
+        - name: servicebhttp
+          image: image-registry.openshift-image-registry.svc:5000/pablo-demo/servicebhttp
+          ports:
+            - containerPort: 5000
+          resources:
+            # requests:
+            #   memory: "256Mi"
+            #   cpu: "250m"
+            # limits:
+            #   memory: "512Mi"
+            #   cpu: "500m"
+            requests:
+              memory: "64Mi"
+              cpu: "125m"
+            limits:
+              memory: "125Mi"
+              cpu: "250m"
+      volumes:
+        - name: certs-volume
+          configMap:
+            name: servicebhttp-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicebhttp-service
+  labels:
+    app: servicebhttp
+spec:
+  type: ClusterIP
+  selector:
+    app: servicebhttp
+  ports:
+    - port: 5000
+      targetPort: 5000
