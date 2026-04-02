@@ -42,18 +42,19 @@ var mtlsClient = new HttpClient(mtlsHandler);
 // =============================
 // ENDPOINT
 // =============================
-app.MapGet("/test", async (string? protocol) =>
+app.MapGet("/test", async (string? protocol, string? size) =>
 {
     protocol ??= "http";
+    size ??= "small";
 
     if (protocol == "http")
-        return await CallHttp();
+        return await CallHttp(size);
 
     if (protocol == "grpc")
-        return await CallGrpc();
+        return await CallGrpc(size);
 
     if (protocol == "mtls")
-        return await CallMtls();
+        return await CallMtls(size);
 
     return Results.BadRequest("Invalid protocol");
 });
@@ -64,41 +65,43 @@ app.Run("http://0.0.0.0:5000");
 // =============================
 // HTTP
 // =============================
-async Task<object> CallHttp()
+async Task<object> CallHttp(string size)
 {
     var response = await httpClient.GetFromJsonAsync<DataResponse>(
-        // "http://localhost:5001/data?size=large"
-        // "http://host.docker.internal:5001/data?size=large"
-        "http://servicebhttp-service:5000/data?size=large"
+        $"http://servicebhttp-service:5000/data?size={size}"
     );
 
-    return response!;
+    if (response is null)
+        throw new Exception("Response was null");
+
+    return response;
 }
+
 
 
 // =============================
 // gRPC
 // =============================
-async Task<object> CallGrpc()
+async Task<object> CallGrpc(string size)
 {
     var headers = new Metadata();
-    headers.Add("size", "large");
+    headers.Add("size", size);
 
-    var reply = await grpcClient.GetDataAsync(new DataRequest(), headers);
-    return reply;
+    return await grpcClient.GetDataAsync(new DataRequest(), headers);
 }
 
 
 // =============================
 // mTLS
 // =============================
-async Task<object> CallMtls()
+async Task<object> CallMtls(string size)
 {
     var response = await mtlsClient.GetFromJsonAsync<DataResponse>(
-        // "https://localhost:5003/data?size=large"
-        // "https://host.docker.internal:5003/data?size=large"
-        "https://servicebmtls-service:5000/data?size=large"
+        $"https://servicebmtls-service:5000/data?size={size}"
     );
 
-    return response!;
+    if (response is null)
+        throw new Exception("Response was null");
+
+    return response;
 }
