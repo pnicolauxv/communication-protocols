@@ -1,27 +1,47 @@
 using Grpc.Core;
 using Data;
+using System.Text;
 
 public class DataServiceImpl : DataService.DataServiceBase
 {
-    string GeneratePayload(string size) => size switch
-        {
-            "small" => new string('x', 1 * 1024),       // 1 KB
-            "medium" => new string('x', 10 * 1024),     // 10 KB
-            "large" => new string('x', 100 * 1024),     // 100 KB
-            _ => new string('x', 1 * 1024)              // default: small
-        };
+    private const int ChunkSize = 1024;
 
-    public override Task<DataResponse> GetData(DataRequest request, ServerCallContext context)
+    int GetPayloadSize(string size)
     {
-        var size = context.RequestHeaders.GetValue("size") ?? "small";
-
-        var response = new DataResponse
+        if (int.TryParse(size, out int multiplier) && multiplier > 0)
         {
-            Message = "grpc ok",
-            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            Data = GeneratePayload(size)
-        };
+            multiplier = Math.Min(multiplier, 1024); // max 1MB
+            return multiplier * ChunkSize;
+        }
 
-        return Task.FromResult(response);
+        return ChunkSize;
+    }
+
+    public override async Task GetDataStream(
+        DataRequest request,
+        IServerStreamWriter<DataChunk> responseStream,
+        ServerCallContext context)
+    {
+        var sizeHeader = context.RequestHeaders.GetValue("size") ?? "1";
+        int totalSize = GetPayloadSize(sizeHeader);
+
+        byte[] buffer = new byte[ChunkSize];
+        Array.Fill(buffer, (byte)'x');
+
+        int remaining = totalSize;
+
+        while (remaining > 0)
+        {
+            int toWrite = Math.Min(remaining, ChunkSize);
+
+            var chunk = new DataChunk
+            {
+                Data = Encoding.UTF8.GetString(buffer, 0, toWrite)
+            };
+
+            await responseStream.WriteAsync(chunk);
+
+            remaining -= toWrite;
+        }
     }
 }

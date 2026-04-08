@@ -45,7 +45,7 @@ var mtlsClient = new HttpClient(mtlsHandler);
 app.MapGet("/test", async (string? protocol, string? size) =>
 {
     protocol ??= "http";
-    size ??= "small";
+    size ??= "1";
 
     if (protocol == "http")
         return await CallHttp(size);
@@ -87,7 +87,24 @@ async Task<object> CallGrpc(string size)
     var headers = new Metadata();
     headers.Add("size", size);
 
-    return await grpcClient.GetDataAsync(new DataRequest(), headers);
+    using var call = grpcClient.GetDataStream(new DataRequest(), headers);
+
+    var result = new System.Text.StringBuilder();
+
+    long timestamp = 0;
+
+    await foreach (var chunk in call.ResponseStream.ReadAllAsync())
+    {
+        if (timestamp == 0) timestamp = chunk.Timestamp;
+        result.Append(chunk.Data);
+    }
+
+    return new DataResponse
+    {
+        Message = "grpc ok",
+        Timestamp = timestamp,
+        Data = result.ToString()
+    };
 }
 
 
@@ -104,4 +121,11 @@ async Task<object> CallMtls(string size)
         throw new Exception("Response was null");
 
     return response;
+}
+
+public class DataResponse
+{
+    public string Message { get; set; } = string.Empty;
+    public long Timestamp { get; set; }
+    public string Data { get; set; } = string.Empty;
 }

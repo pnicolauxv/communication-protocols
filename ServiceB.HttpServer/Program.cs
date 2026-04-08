@@ -6,13 +6,16 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-int GetPayloadSize(string? size) => size?.ToLowerInvariant() switch
+int GetPayloadSize(string? size)
 {
-    "small" => 1 * 1024,     // 1 KB
-    "medium" => 10 * 1024,   // 10 KB
-    "large" => 100 * 1024,   // 100 KB
-    _ => 1 * 1024
-};
+    if (int.TryParse(size, out int multiplier) && multiplier > 0)
+    {
+        multiplier = Math.Min(multiplier, 1024);
+        return multiplier * 1024;
+    }
+
+    return 1 * 1024;
+}
 
 app.MapGet("/data", async (HttpResponse response, string? size) =>
 {
