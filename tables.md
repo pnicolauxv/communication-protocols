@@ -21,6 +21,8 @@
 
 We’ve observed that gRPC performance degrades progressively with large payloads, primarily due to serialization overhead. We attempted to improve this by sending data in chunks, but this approach did not yield better results, each chunk carries its own headers, which introduces additional overhead and negates the potential benefits.
 
+Using a single large chunk instead showed some improvement in performance, but for very large payloads, the same performance issues still occur.
+
 Additionally, timing measurements can fluctuate because of internal CPU and memory behavior within pods.
 
-Overall, gRPC performs comparably—or slightly better than HTTP—for small payloads. However, for larger payloads, HTTP consistently outperforms gRPC.
+Overall, gRPC performs comparably or slightly better than HTTP for small payloads. However, for larger payloads, HTTP consistently outperforms gRPC.

@@ -1,47 +1,33 @@
 using Grpc.Core;
 using Data;
-using System.Text;
 
 public class DataServiceImpl : DataService.DataServiceBase
 {
-    private const int ChunkSize = 1024;
-
     int GetPayloadSize(string size)
     {
         if (int.TryParse(size, out int multiplier) && multiplier > 0)
         {
-            multiplier = Math.Min(multiplier, 1024); // max 1MB
-            return multiplier * ChunkSize;
+            multiplier = Math.Min(multiplier, 1024);
+            return multiplier * 1024;
         }
 
-        return ChunkSize;
+        return 1 * 1024;
     }
 
-    public override async Task GetDataStream(
-        DataRequest request,
-        IServerStreamWriter<DataChunk> responseStream,
-        ServerCallContext context)
+    public override Task<DataResponse> GetData(DataRequest request, ServerCallContext context)
     {
         var sizeHeader = context.RequestHeaders.GetValue("size") ?? "1";
         int totalSize = GetPayloadSize(sizeHeader);
 
-        byte[] buffer = new byte[ChunkSize];
-        Array.Fill(buffer, (byte)'x');
+        string payload = new string('x', totalSize);
 
-        int remaining = totalSize;
-
-        while (remaining > 0)
+        var response = new DataResponse
         {
-            int toWrite = Math.Min(remaining, ChunkSize);
+            Message = "grpc ok",
+            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Data = payload
+        };
 
-            var chunk = new DataChunk
-            {
-                Data = Encoding.UTF8.GetString(buffer, 0, toWrite)
-            };
-
-            await responseStream.WriteAsync(chunk);
-
-            remaining -= toWrite;
-        }
+        return Task.FromResult(response);
     }
 }

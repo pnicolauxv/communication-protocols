@@ -3,13 +3,13 @@ syntax = "proto3";
 package Data;
 
 service DataService {
-  rpc GetDataStream (DataRequest) returns (stream DataChunk);
+  rpc GetData (DataRequest) returns (DataResponse);
 }
 
 message DataRequest {}
 
-message DataChunk {
-  string message = 1;   // siempre "grpc ok"
-  int64 timestamp = 2;  // Unix timestamp en ms
-  string data = 3;      // 1 KB de datos por chunk
+message DataResponse {
+  string message = 1;
+  int64 timestamp = 2;
+  string data = 3;
 }

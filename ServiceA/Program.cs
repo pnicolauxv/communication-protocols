@@ -87,23 +87,13 @@ async Task<object> CallGrpc(string size)
     var headers = new Metadata();
     headers.Add("size", size);
 
-    using var call = grpcClient.GetDataStream(new DataRequest(), headers);
+    var response = await grpcClient.GetDataAsync(new DataRequest(), headers);
 
-    var result = new System.Text.StringBuilder();
-
-    long timestamp = 0;
-
-    await foreach (var chunk in call.ResponseStream.ReadAllAsync())
+    return new
     {
-        if (timestamp == 0) timestamp = chunk.Timestamp;
-        result.Append(chunk.Data);
-    }
-
-    return new DataResponse
-    {
-        Message = "grpc ok",
-        Timestamp = timestamp,
-        Data = result.ToString()
+        Message = response.Message,
+        Timestamp = response.Timestamp,
+        Data = response.Data
     };
 }
 
